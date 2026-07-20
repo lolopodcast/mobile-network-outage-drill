@@ -1,0 +1,124 @@
+<svg viewBox="0 0 1200 940" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft JhengHei','PingFang TC','Noto Sans TC',Inter,sans-serif">
+  <defs>
+    <marker id="arrowFlow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#004030"/>
+    </marker>
+    <marker id="arrowRel" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#B08D57"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="940" fill="#f4f4f4"/>
+
+  <!-- Title -->
+  <text x="600" y="52" text-anchor="middle" font-size="30" font-weight="700" fill="#004030">城鎮韌性・行動斷網演練 行動方案</text>
+  <text x="600" y="80" text-anchor="middle" font-size="15" fill="#4b5563" letter-spacing="0.5">Urban Resilience — Mobile Network Outage Drill · Core Framework (Level 3 KB)</text>
+
+  <!-- Flow row -->
+  <g font-size="16" font-weight="700" fill="#004030">
+    <rect x="50" y="120" width="230" height="70" rx="12" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <text x="165" y="150" text-anchor="middle">Input 平時準備</text>
+    <text x="165" y="170" text-anchor="middle" font-size="11" font-weight="400" fill="#6b7280">號碼・截圖・離線資料・現金・電力</text>
+
+    <rect x="330" y="120" width="230" height="70" rx="12" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <text x="445" y="150" text-anchor="middle">Process 實際演練</text>
+    <text x="445" y="170" text-anchor="middle" font-size="11" font-weight="400" fill="#6b7280">走路線・離線測試・無支付購物</text>
+
+    <rect x="610" y="120" width="230" height="70" rx="12" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <text x="725" y="150" text-anchor="middle">Output 找出斷點</text>
+    <text x="725" y="170" text-anchor="middle" font-size="11" font-weight="400" fill="#6b7280">例：檔案需連雲端才能下載</text>
+
+    <rect x="890" y="120" width="230" height="70" rx="12" fill="#004030" stroke="#004030" stroke-width="2"/>
+    <text x="1005" y="150" text-anchor="middle" fill="#D8C3A5">Value 城鎮韌性</text>
+    <text x="1005" y="170" text-anchor="middle" font-size="11" font-weight="400" fill="#D8C3A5">修正備援方案・逐步累積</text>
+  </g>
+  <line x1="280" y1="155" x2="325" y2="155" stroke="#004030" stroke-width="2.5" marker-end="url(#arrowFlow)"/>
+  <line x1="560" y1="155" x2="605" y2="155" stroke="#004030" stroke-width="2.5" marker-end="url(#arrowFlow)"/>
+  <line x1="840" y1="155" x2="885" y2="155" stroke="#004030" stroke-width="2.5" marker-end="url(#arrowFlow)"/>
+
+  <text x="600" y="230" text-anchor="middle" font-size="15" font-weight="700" fill="#004030">六大準備面向 Six Preparedness Dimensions</text>
+
+  <!-- Relation arrows (drawn first, under cards; routed through the gaps between cards to avoid overlapping card content) -->
+  <path d="M 970,462 C 850,488 750,488 600,462" fill="none" stroke="#B08D57" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowRel)"/>
+  <text x="785" y="500" text-anchor="middle" font-size="11" fill="#8a6d3b">支撐 supports</text>
+
+  <path d="M 430,505 Q 410,480 397,458" fill="none" stroke="#B08D57" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowRel)"/>
+  <text x="330" y="483" text-anchor="middle" font-size="11" fill="#8a6d3b">支撐 supports</text>
+
+  <!-- Card template repeated: row1 y=260, row2 y=500 ; cols x=60,430,800 ; w=340 h=200 -->
+  <g>
+    <!-- Card 1: 通訊備援與會合機制 -->
+    <rect x="60" y="260" width="340" height="200" rx="16" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <circle cx="105" cy="300" r="24" fill="#004030"/>
+    <path d="M93,296 h24 M93,304 h24 M93,312 h16" stroke="#D8C3A5" stroke-width="3" stroke-linecap="round"/>
+    <text x="140" y="297" font-size="13" fill="#9ca3af" font-weight="700">3.1</text>
+    <text x="140" y="317" font-size="17" font-weight="700" fill="#004030">通訊備援與會合機制</text>
+    <text x="80" y="345" font-size="11.5" fill="#374151">Communication &amp; Rendezvous</text>
+    <text x="80" y="372" font-size="12.5" fill="#4b5563">電話號碼・簡訊格式約定</text>
+    <text x="80" y="392" font-size="12.5" fill="#4b5563">＋實體會合點與時間（新增）</text>
+    <text x="80" y="440" font-size="11" font-style="italic" fill="#9ca3af">簡訊格式≠斷網保底，需搭配會合點</text>
+
+    <!-- Card 2: 空間與路線熟悉 -->
+    <rect x="430" y="260" width="340" height="200" rx="16" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <circle cx="475" cy="300" r="24" fill="#004030"/>
+    <path d="M475,290 l9,20 h-18 z" fill="#D8C3A5"/>
+    <circle cx="475" cy="292" r="3" fill="#004030"/>
+    <text x="510" y="297" font-size="13" fill="#9ca3af" font-weight="700">3.2</text>
+    <text x="510" y="317" font-size="17" font-weight="700" fill="#004030">空間與路線熟悉</text>
+    <text x="450" y="345" font-size="11.5" fill="#374151">Spatial &amp; Route Familiarity</text>
+    <text x="450" y="372" font-size="12.5" fill="#4b5563">避難處所位置截圖保存</text>
+    <text x="450" y="392" font-size="12.5" fill="#4b5563">實走入口・步行時間・替代路線</text>
+
+    <!-- Card 3: 資料離線化檢查 -->
+    <rect x="800" y="260" width="340" height="200" rx="16" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <circle cx="845" cy="300" r="24" fill="#004030"/>
+    <rect x="833" y="292" width="24" height="6" rx="2" fill="#D8C3A5"/>
+    <rect x="833" y="301" width="24" height="6" rx="2" fill="#D8C3A5" opacity="0.7"/>
+    <rect x="833" y="310" width="24" height="6" rx="2" fill="#D8C3A5" opacity="0.45"/>
+    <text x="880" y="297" font-size="13" fill="#9ca3af" font-weight="700">3.3</text>
+    <text x="880" y="317" font-size="17" font-weight="700" fill="#004030">資料離線化檢查</text>
+    <text x="820" y="345" font-size="11.5" fill="#374151">Offline Data Readiness</text>
+    <text x="820" y="372" font-size="12.5" fill="#4b5563">避難地圖・證件・醫療・票券・工作文件</text>
+    <text x="820" y="440" font-size="11" font-style="italic" fill="#9ca3af">「顯示存在」≠「已離線儲存」</text>
+
+    <!-- Card 4: 現金與實體支付備援 -->
+    <rect x="60" y="500" width="340" height="200" rx="16" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <circle cx="105" cy="540" r="24" fill="#004030"/>
+    <circle cx="105" cy="540" r="11" fill="none" stroke="#D8C3A5" stroke-width="3"/>
+    <text x="140" y="537" font-size="13" fill="#9ca3af" font-weight="700">3.4</text>
+    <text x="140" y="557" font-size="17" font-weight="700" fill="#004030">現金與實體支付備援</text>
+    <text x="80" y="585" font-size="11.5" fill="#374151">Cash &amp; Physical Payment</text>
+    <text x="80" y="612" font-size="12.5" fill="#4b5563">現金・零錢・實體信用卡・悠遊卡</text>
+    <text x="80" y="632" font-size="12.5" fill="#4b5563">實際購物測試無行動支付生活</text>
+
+    <!-- Card 5: 電力備援 -->
+    <rect x="430" y="500" width="340" height="200" rx="16" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <circle cx="475" cy="540" r="24" fill="#004030"/>
+    <path d="M479,528 l-13,18 h10 l-4,14 15,-19 h-10 z" fill="#D8C3A5"/>
+    <text x="510" y="537" font-size="13" fill="#9ca3af" font-weight="700">3.5</text>
+    <text x="510" y="557" font-size="17" font-weight="700" fill="#004030">電力備援（新增）</text>
+    <text x="450" y="585" font-size="11.5" fill="#374151">Power Backup</text>
+    <text x="450" y="612" font-size="12.5" fill="#4b5563">行動電源充飽・備用電池</text>
+    <text x="450" y="660" font-size="11" font-style="italic" fill="#9ca3af">斷網常伴隨停電，屬前置基礎條件</text>
+
+    <!-- Card 6: 資訊查證素養 -->
+    <rect x="800" y="500" width="340" height="200" rx="16" fill="#ffffff" stroke="#004030" stroke-width="2"/>
+    <circle cx="845" cy="540" r="24" fill="#004030"/>
+    <circle cx="841" cy="536" r="8" fill="none" stroke="#D8C3A5" stroke-width="3"/>
+    <line x1="847" y1="542" x2="855" y2="550" stroke="#D8C3A5" stroke-width="3" stroke-linecap="round"/>
+    <text x="880" y="537" font-size="13" fill="#9ca3af" font-weight="700">3.6</text>
+    <text x="880" y="557" font-size="17" font-weight="700" fill="#004030">資訊查證素養</text>
+    <text x="820" y="585" font-size="11.5" fill="#374151">Information Verification Literacy</text>
+    <text x="820" y="612" font-size="12.5" fill="#4b5563">官方／親眼／轉述？需要立刻轉傳嗎？</text>
+    <text x="820" y="632" font-size="12.5" fill="#4b5563">先傳位置狀況需求，不急著散布</text>
+  </g>
+
+  <!-- Extension node (dashed) -->
+  <rect x="330" y="750" width="540" height="90" rx="14" fill="none" stroke="#9ca3af" stroke-width="2" stroke-dasharray="8,5"/>
+  <text x="600" y="782" text-anchor="middle" font-size="14" font-weight="700" fill="#6b7280">延伸項（待確認）事後複盤與經驗回饋</text>
+  <text x="600" y="802" text-anchor="middle" font-size="11.5" fill="#9ca3af">Post-drill Debrief &amp; Feedback Loop — Optional Extension</text>
+  <line x1="600" y1="700" x2="600" y2="745" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- Footer -->
+  <text x="600" y="900" text-anchor="middle" font-size="11" fill="#9ca3af">城鎮韌性－行動斷網演練_知識庫.md 之核心架構視覺化 · Version 2026.07.20</text>
+</svg>

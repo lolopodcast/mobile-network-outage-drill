@@ -1,0 +1,19 @@
+{
+  "name": "行動斷網演練行動方案 Mobile Network Outage Drill",
+  "short_name": "行動斷網演練",
+  "description": "城鎮韌性－行動斷網演練互動行動方案：通訊備援、避難路線、離線資料、現金備援、電力備援與資訊查證，中英雙語、可離線使用。",
+  "id": "/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f4f4",
+  "theme_color": "#004030",
+  "lang": "zh-Hant",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

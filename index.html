@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行動斷網演練行動方案 Mobile Network Outage Drill</title>
+<meta name="description" content="城鎮韌性－行動斷網演練互動行動方案：通訊備援、避難路線、離線資料、現金備援、電力備援與資訊查證，中英雙語、可離線使用。">
+<meta name="theme-color" content="#004030">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="行動斷網演練">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], serif: ['Merriweather','serif'] } } }
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.7/babel.min.js"></script>
+<style>
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+  .animate-fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+  .perspective { perspective: 1000px; }
+  .transform-style-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .rotate-y-180 { transform: rotateY(180deg); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .dark ::-webkit-scrollbar-thumb { background: #475569; }
+  @media print {
+    header, footer, aside, .no-print { display: none !important; }
+    body { background: #fff !important; }
+    main { padding-top: 0 !important; }
+  }
+</style>
+</head>
+<body class="bg-[#f4f4f4] dark:bg-[#121212] selection:bg-[#004030] selection:text-white dark:selection:bg-[#D8C3A5] dark:selection:text-[#004030]">
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ---------- localStorage helpers ---------- */
+const loadLS = (key, fb) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fb; } catch { return fb; } };
+
+/* ---------- Icons ---------- */
+const Icon = ({ d, size = 20, className = '', children, viewBox = "0 0 24 24" }) => (
+  <svg width={size} height={size} viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {d ? <path d={d}/> : children}
+  </svg>
+);
+const IconBookOpen = (p) => <Icon {...p} d="M12 6.5C10.5 5 8 4.5 4 5v13c4-.5 6.5 0 8 1.5 1.5-1.5 4-2 8-1.5V5c-4-.5-6.5 0-8 1.5z"/>;
+const IconAlertTriangle = (p) => <Icon {...p}><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="13.5"/><circle cx="12" cy="16.5" r="0.9" fill="currentColor" stroke="none"/></Icon>;
+const IconCheckCircle = (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></Icon>;
+const IconGlobe = (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15.5 0 18M12 3c-2.5 2.5-2.5 15.5 0 18"/></Icon>;
+const IconChevronRight = (p) => <Icon {...p}><polyline points="9 6 15 12 9 18"/></Icon>;
+const IconChevronUp = (p) => <Icon {...p}><polyline points="6 15 12 9 18 15"/></Icon>;
+const IconMenu = (p) => <Icon {...p}><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></Icon>;
+const IconX = (p) => <Icon {...p}><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></Icon>;
+const IconMoon = (p) => <Icon {...p} d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>;
+const IconSun = (p) => <Icon {...p}><circle cx="12" cy="12" r="4"/><g strokeLinecap="round"><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></g></Icon>;
+const IconPlay = (p) => <Icon {...p}><polygon points="6 4 20 12 6 20"/></Icon>;
+const IconPause = (p) => <Icon {...p}><line x1="8" y1="5" x2="8" y2="19" strokeWidth="3"/><line x1="16" y1="5" x2="16" y2="19" strokeWidth="3"/></Icon>;
+const IconSquare = (p) => <Icon {...p}><rect x="6" y="6" width="12" height="12" rx="1"/></Icon>;
+const IconArrowRight = (p) => <Icon {...p}><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></Icon>;
+const IconActivity = (p) => <Icon {...p}><polyline points="3 12 8 12 10 6 14 18 16 12 21 12"/></Icon>;
+const IconLayers = (p) => <Icon {...p}><polygon points="12 3 21 8 12 13 3 8"/><polyline points="3 13.5 12 18.5 21 13.5"/></Icon>;
+const IconFlag = (p) => <Icon {...p}><line x1="5" y1="3" x2="5" y2="21"/><path d="M5 4c4-2 8 2 12 0v9c-4 2-8-2-12 0z"/></Icon>;
+const IconZap = (p) => <Icon {...p}><polygon points="13 2 4 14 11 14 10 22 20 10 13 10 13 2"/></Icon>;
+const IconFlask = (p) => <Icon {...p} d="M9 3h6M10 3v6l-6 10a1 1 0 0 0 1 1.5h14a1 1 0 0 0 1-1.5l-6-10V3"/>;
+const IconHome = (p) => <Icon {...p}><path d="M4 11 12 4l8 7"/><path d="M6 10v10h5v-6h2v6h5V10"/></Icon>;
+const IconTrendingUp = (p) => <Icon {...p}><polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/></Icon>;
+const IconCopy = (p) => <Icon {...p}><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></Icon>;
+const IconCheck = (p) => <Icon {...p}><polyline points="5 12 10 17 19 7"/></Icon>;
+
+/* ---------- Module counts ---------- */
+const NUM_LEARN = 6;
+const TOTAL = 1 + NUM_LEARN + 3;
+const IDX_LAB = NUM_LEARN + 1;
+const IDX_RES = NUM_LEARN + 2;
+const IDX_ANA = NUM_LEARN + 3;
+
+/* ---------- Bilingual dictionary ---------- */
+const dict = {
+  zh: {
+    brand: "URD",
+    title: "行動斷網演練行動方案",
+    subtitle: "城鎮韌性個人與家庭準備指南",
+    nav_prev: "上一單元", nav_next: "下一單元", nav_home: "首頁",
+    key_terms: "關鍵概念", flip_prompt: "點擊翻轉",
+    flip_status: "已讀 {read} / 已顯示 {shown} / 總計 {total}",
+    flip_next: "下一組", flip_retry: "重新開始",
+    audio_read: "語音導覽",
+    checklist_title: "行動檢核清單", checklist_status: "已完成 {done} / 共 {total} 項",
+    checklist_complete: "✓ 本面向已全部完成，做得好！",
+    overview_label: "概述 Overview", highlights_label: "重點 Highlights",
+    deep_dive_label: "深入解析 Deep Dive", wrapup_label: "總結 Wrap-up",
+
+    m0_nav: "0. 執行概要",
+    m1_nav: "1. 通訊備援與會合機制", m2_nav: "2. 空間與路線熟悉", m3_nav: "3. 資料離線化檢查",
+    m4_nav: "4. 現金與實體支付備援", m5_nav: "5. 電力備援", m6_nav: "6. 資訊查證素養",
+    mlab_nav: "7. 互動實驗室", mres_nav: "8. 外部學習資源", mana_nav: "9. 我的演練進度",
+
+    m0_title: "行動斷網，你的家庭準備好了嗎？",
+    m0_intro: "行動斷網不只是「訊號不好」，而是電話、簡訊、地圖、行動支付同時失效的情境。城鎮韌性從來不是抽象口號，而是由每個家庭、每個人的準備行動疊加而成。這份行動方案把「城鎮韌性－行動斷網演練」拆解成六大準備面向：通訊備援與會合機制、空間與路線熟悉、資料離線化檢查、現金與實體支付備援、電力備援，以及資訊查證素養。每一項都不是「知道就好」的知識，而是要求你實際走一趟避難路線、實際測試一次離線資料、實際用一次現金購物。演練的目的不是製造焦慮，而是在網路正常的今天，先找出「以為可行、實際卻不可行」的斷點——例如以為存在手機裡的證件照片，其實只是雲端縮圖。透過反覆演練與紀錄，你和你的家人就能在真正斷網的那一刻，仍然知道彼此在哪裡、該往哪裡走、該怎麼過日子。",
+    m0_why: "為什麼現在就要演練？",
+    m0_why_desc: "災害或基礎設施事故發生時才第一次嘗試離線生活，風險太高。演練讓你在低風險的日常裡，把每個備援方案實際跑過一次，確認它真的可行。",
+    m0_stats: [
+      { val: "6", label: "大準備面向" },
+      { val: "1", label: "次演練起手" },
+      { val: "0元", label: "也要過得下去" },
+      { val: "7天", label: "建議定期複測" }
+    ],
+    m0_modules: [
+      { num: "01", title: "通訊備援與會合機制", desc: "約定簡訊格式＋實體會合點，斷訊也找得到彼此" },
+      { num: "02", title: "空間與路線熟悉", desc: "實走一次避難路線，離線也知道怎麼走" },
+      { num: "03", title: "資料離線化檢查", desc: "確認證件、地圖、票券是否真正離線可用" },
+      { num: "04", title: "現金與實體支付備援", desc: "測試沒有行動支付的一天" },
+      { num: "05", title: "電力備援", desc: "行動電源充飽，斷網常伴隨停電" },
+      { num: "06", title: "資訊查證素養", desc: "查證優先於轉傳，避免製造二次混亂" }
+    ],
+    m0_start: "開始準備",
+
+    m1_title: "通訊備援與會合機制",
+    m1_overview: "確認家人、伴侶與重要同事的聯絡方式，並約定斷訊時的簡訊格式與實體會合點，是所有備援的第一道防線。",
+    m1_highlights: ["電話號碼", "簡訊格式", "實體會合點", "時間約定"],
+    m1_p1: "事先確認家人、伴侶與重要同事的電話號碼，並約定簡訊格式：「我平安／目前在＿＿／接下來前往＿＿／預計＿＿點再次聯絡」。這個格式的好處是資訊量小、容易在網路不穩時送出，也讓對方一次掌握你的安全狀態、位置與下一步計畫。",
+    m1_p2: "但要留意一個關鍵落差：這個做法的前提是行動網路「間歇性恢復」或能連上其他 Wi-Fi。若行動網路完全中斷，簡訊同樣送不出去，約定好的格式就成了一句空話。",
+    m1_p3: "因此，通訊備援必須搭配一個不依賴任何網路的保底機制：實體會合點與時間。也就是事先約定「如果完全聯絡不上，幾點在哪裡碰面」，作為簡訊格式失效時的最後防線。",
+    m1_terms: [
+      { front: "簡訊格式", back: "「我平安／目前在＿＿／接下來前往＿＿／預計＿＿點再次聯絡」，適用於網路間歇性恢復或可連其他Wi-Fi時。" },
+      { front: "實體會合點", back: "完全斷訊時的保底機制：事先約定「幾點、在哪裡」碰面，不依賴任何網路。" },
+      { front: "間歇性恢復", back: "行動斷網不一定是100%全斷，也可能是訊號時有時無，簡訊格式正是為這種情境設計。" },
+      { front: "通訊落差", back: "「約定簡訊格式」≠「斷網保底機制」，這是最容易被忽略的邏輯落差。" }
+    ],
+    m1_wrapup: "通訊備援不是一份聯絡人名單，而是兩層機制：網路間歇性恢復時用簡訊格式快速回報狀態；完全斷訊時用實體會合點與時間作為保底。兩者缺一不可，光約定簡訊格式而沒有會合點，是最常見的準備落差。下一步：把會合點與時間，明確告訴你在乎的每一個人。",
+    m1_checklist: [
+      "已取得家人、伴侶、重要同事的最新電話號碼",
+      "已與對方確認簡訊格式：我平安／目前在／前往／預計幾點聯絡",
+      "已約定「完全聯絡不上時」的實體會合點",
+      "已約定會合點的碰面時間（例如：當天18:00或隔日再確認）",
+      "已把會合點位置實際告知所有相關人員（非只是自己知道）"
+    ],
+
+    m2_title: "空間與路線熟悉",
+    m2_overview: "演練前查好最近避難處所並截圖保存，斷網期間實際走一次，確認入口、步行時間與替代路線。",
+    m2_highlights: ["避難處所", "離線截圖", "入口位置", "替代路線"],
+    m2_p1: "演練前先查好最近的避難處所位置，並截圖保存在手機相簿中——這張截圖必須是真正的圖片檔案，而不是地圖 App 裡的一個「已加星號的地點」，否則斷網後同樣打不開。",
+    m2_p2: "斷網期間刻意不使用 Google Maps，實際走一趟。這麼做的目的不是測試體力，而是確認三件事：入口實際在哪裡（許多避難處所的正門與地圖標示的位置不同）、步行需要多久，以及主要道路萬一受阻時，有沒有你自己找得到的替代路線。",
+    m2_p3: "這些資訊一旦真正走過一次，就會變成你身體記憶的一部分，不再需要依賴任何電子地圖。",
+    m2_terms: [
+      { front: "避難處所截圖", back: "必須是相簿裡的真實圖片檔，而非地圖App裡的「已收藏地點」。" },
+      { front: "入口位置", back: "實際正門常與地圖標示不同，需實走一次才能確認。" },
+      { front: "替代路線", back: "主要道路受阻時的備用走法，需要事先探查、不能臨場現找。" },
+      { front: "身體記憶", back: "走過一次的路線，會內化成不依賴電子地圖的記憶。" }
+    ],
+    m2_wrapup: "空間熟悉不能靠螢幕截圖代替雙腳。截圖只是保底資料，真正的備援是你走過一次之後，身體記得入口在哪裡、要走多久、路斷了要往哪繞。這件事沒辦法臨場現學，只能提前演練。",
+    m2_checklist: [
+      "已找到最近的避難處所並存成手機相簿裡的圖片（非地圖收藏）",
+      "已離線（關閉行動數據）實際走到避難處所一次",
+      "已確認實際入口位置（與地圖標示是否一致）",
+      "已記錄從家裡步行到避難處所所需時間",
+      "已找出一條主要道路受阻時的替代路線"
+    ],
+
+    m3_title: "資料離線化檢查",
+    m3_overview: "檢查手機裡的避難地圖、證件、醫療用藥、票券與工作文件，是否真正離線可用，而不是只是看起來存在。",
+    m3_highlights: ["離線地圖", "證件資訊", "醫療用藥", "電子票券", "工作文件"],
+    m3_p1: "檢查手機裡以下五類資料能不能離線使用：避難處所與離線地圖、證件及緊急聯絡資訊、醫療與用藥資料、車票與住宿地址及電子票券、工作文件及合作夥伴名單。",
+    m3_p2: "很多檔案看起來已經存在手機裡，實際上仍然需要連上雲端才能下載——雲端相簿、雲端硬碟、票券 App 常常只在本機存了縮圖或索引，內容本身要連網才抓得到。開啟飛航模式，逐一點開這些檔案，才會發現哪些其實打不開。",
+    m3_p3: "這是整份行動方案裡最容易「自我感覺良好」的一項：手機容量顯示有檔案，不代表斷網後真的能用。唯一的驗證方法，就是斷網狀態下實際打開來看。",
+    m3_terms: [
+      { front: "離線地圖", back: "避難處所位置需存成圖片檔，App內收藏無法離線開啟。" },
+      { front: "雲端縮圖", back: "相簿或雲端硬碟顯示的檔案，可能只是縮圖或索引，本體仍在雲端。" },
+      { front: "飛航模式測試", back: "驗證離線可用性最直接的方法：關閉所有連線，逐一實際打開檔案。" },
+      { front: "自我感覺良好", back: "「手機裡看起來有」是最容易造成的錯覺，唯有實測才能戳破。" }
+    ],
+    m3_wrapup: "這一項的重點不是列清單，而是實測。打開飛航模式，逐一點開避難地圖、證件、醫療資料、票券與工作文件，凡是打不開的，代表你發現了一個真實的斷點，這正是演練的價值所在。",
+    m3_checklist: [
+      "已開啟飛航模式，測試避難地圖截圖能否開啟",
+      "已測試證件與緊急聯絡資訊能否離線開啟",
+      "已測試醫療與用藥資料能否離線開啟",
+      "已測試車票、住宿地址、電子票券能否離線開啟",
+      "已測試工作文件及合作夥伴名單能否離線開啟",
+      "已把發現打不開的檔案，另存一份到本機相簿或筆記App"
+    ],
+
+    m4_title: "現金與實體支付備援",
+    m4_overview: "準備現金、零錢與實體卡片，並實際購買一次東西，測試沒有行動支付時生活是否仍能運作。",
+    m4_highlights: ["現金", "零錢", "實體信用卡", "悠遊卡", "實測購物"],
+    m4_p1: "準備少量現金、零錢、實體信用卡與悠遊卡。金額不需要多，重點是「有」，而且放在你演練當天真的會帶出門的地方，而不是鎖在家裡的抽屜。",
+    m4_p2: "接著實際購買一樣東西——一杯飲料、一份便當都可以，觀察在沒有行動支付、叫車、外送與會員 App 的情況下，日常付款、叫車、外送是否仍可正常運作。你會發現，有些店家幾乎已經不收現金，這本身就是一個值得記錄的斷點。",
+    m4_p3: "這一項的意義不只是「有沒有帶現金」，而是重新確認：當手機所有便利功能都失效時，你熟悉的日常動線裡，還有哪些環節仍然能運作。",
+    m4_terms: [
+      { front: "現金備援", back: "少量現金＋零錢，重點是放在真的會帶出門的地方。" },
+      { front: "實體卡片", back: "實體信用卡與悠遊卡，不依賴手機App的支付方式。" },
+      { front: "實測購物", back: "演練不能只用想的，要實際完成一次無行動支付的購買。" },
+      { front: "不收現金", back: "部分店家已幾乎不收現金，本身就是需要記錄的落差。" }
+    ],
+    m4_wrapup: "現金備援測試的不是你的錢包，而是你的生活動線在斷網時還剩下多少彈性。準備現金只是第一步，真正的演練是走進店裡，付一次錢，看看行不行得通。",
+    m4_checklist: [
+      "已準備少量現金與零錢，放在演練當天會帶出門的位置",
+      "已確認實體信用卡與悠遊卡可正常使用",
+      "已實際完成一次無行動支付的購物",
+      "已記錄該店家是否仍願意收現金",
+      "已記錄叫車／外送／會員App失效時的替代做法"
+    ],
+
+    m5_title: "電力備援",
+    m5_overview: "斷網常伴隨停電或基地台限流，出門前把行動電源充飽，是所有其他備援方案的前提。",
+    m5_highlights: ["行動電源", "備用電池", "前置條件", "停電風險"],
+    m5_p1: "這是原始行動方案裡沒有明列、但實際演練時很快就會發現的落差：手機沒電，比手機沒訊號更早讓所有備援方案失效。無論簡訊格式、離線地圖、電子票券準備得多齊全，手機一旦沒電，全部都用不上。",
+    m5_p2: "出門前確認行動電源已充飽電，家中也備妥備用電池，或手搖／太陽能充電設備作為更長時間停電時的備援。行動電源本身也要定期演練——很多人買了行動電源之後從沒真正用它幫手機充過電，直到需要的那一刻才發現線材不合或電量早已耗盡。",
+    m5_p3: "電力備援因此應該被視為通訊備援與資料離線化的前置條件，而不是一個獨立、可有可無的選項。",
+    m5_terms: [
+      { front: "行動電源前測", back: "出門前不只是「有帶」，還要確認真的充飽、線材相容。" },
+      { front: "停電風險", back: "行動斷網常與停電、基地台限流同時發生，並非單一事件。" },
+      { front: "前置條件", back: "電力是通訊與資料備援能否發揮作用的基礎，優先順序在其之前。" },
+      { front: "備用電池", back: "手搖或太陽能充電設備，因應更長時間的停電情境。" }
+    ],
+    m5_wrapup: "電力備援看似最不起眼，卻是整份行動方案能不能運作的地基。行動電源充飽電、線材確認相容，這兩件小事沒做，前面五項準備都可能在關鍵時刻失效。",
+    m5_checklist: [
+      "行動電源已充飽電並確認可正常使用",
+      "已確認行動電源的連接線與手機相容",
+      "家中已備妥備用電池或手搖／太陽能充電設備",
+      "已實際用行動電源幫手機充過一次電（非只是購買放著）"
+    ],
+
+    m6_title: "資訊查證素養",
+    m6_overview: "無法即時查證時，先問三個問題，避免在通訊有限的情境下製造二次混亂。",
+    m6_highlights: ["查證三問", "不急著轉傳", "先傳自身狀況", "避免二次混亂"],
+    m6_p1: "收到資訊時，先問自己：這是官方通知、親眼所見，還是別人的轉述？現在真的需要立刻轉傳給其他人嗎？這兩個問題能快速過濾掉大部分未經查證、只是情緒性轉發的訊息。",
+    m6_p2: "在斷網或通訊頻寬有限的情境下，每一則轉傳都會排擠真正需要傳遞的求助與安全訊息。無法查證時，優先傳送自己的位置、狀況與需求，而不是急著把看到的消息散布出去——你不確定的事情，對方同樣無法判斷真假，只會把不確定性一起傳下去。",
+    m6_p3: "這件事平時就能練習：下次在通訊軟體群組看到未署名來源的訊息時，先套用這兩個問題，養成習慣，而不是等到真正斷網、資訊紊亂時才第一次嘗試。",
+    m6_terms: [
+      { front: "查證三問", back: "官方通知／親眼所見／轉述？是否真的需要立刻轉傳？" },
+      { front: "排擠效應", back: "通訊頻寬有限時，未查證的轉傳會擠壓真正需要的求助訊息。" },
+      { front: "先傳自身狀況", back: "無法查證時，優先傳送自己的位置、狀況與需求。" },
+      { front: "平時練習", back: "查證習慣要在日常群組訊息中先養成，不能等斷網才第一次嘗試。" }
+    ],
+    m6_wrapup: "資訊查證素養的核心不是變得多疑，而是在有限的通訊資源下，把頻寬留給真正重要的求助與安全訊息。先查證、再轉傳；查不到，就先說自己的狀況。",
+    m6_checklist: [
+      "收到訊息時已養成先問「官方／親眼／轉述」的習慣",
+      "轉傳前已自問「現在真的需要立刻轉傳嗎？」",
+      "無法查證時，已練習先傳送自己的位置與狀況",
+      "已與家人約定：無法查證的消息不主動群發"
+    ],
+
+    mlab_title: "動手做：四個實用小工具",
+    mlab_desc: "把知識變成可以立刻使用的工具，幫助你更快完成上面六項準備。",
+    mlab_labs: [
+      { title: "簡訊格式產生器", desc: "填入狀態、位置與時間，一鍵產生可直接傳送的簡訊內容" },
+      { title: "現金備援試算", desc: "輸入家庭人數與天數，估算建議準備的現金金額（僅供參考）" },
+      { title: "行動電源續航試算", desc: "估算行動電源能幫手機充滿電幾次" },
+      { title: "我的準備度雷達", desc: "即時呈現六大面向的檢核清單完成度" }
+    ],
+    lab_sms_title: "簡訊格式產生器",
+    lab_sms_status_safe: "平安", lab_sms_status_help: "需要協助",
+    lab_sms_loc_ph: "目前在（例：住家附近）",
+    lab_sms_dest_ph: "接下來前往（例：OO避難所）",
+    lab_sms_time_ph: "預計幾點聯絡（例：18）",
+    lab_sms_copy: "複製訊息", lab_sms_copied: "已複製！",
+    lab_cash_title: "現金備援試算",
+    lab_cash_members: "家庭人數", lab_cash_days: "預備天數",
+    lab_cash_note: "依每人每日約NT$500估算，僅供規劃參考，非財務建議，請依實際生活開銷調整。",
+    lab_power_title: "行動電源續航試算",
+    lab_power_phone: "手機電池容量 (mAh)", lab_power_bank: "行動電源容量 (mAh)",
+    lab_power_result: "約可充滿手機 {n} 次",
+    lab_power_note: "以約70%轉換效率估算，實際效率因設備與線材而異。",
+    lab_radar_title: "我的準備度雷達",
+
+    mres_title: "外部學習資源",
+    mres_desc: "以下欄位保留給你自行填入實際可信的官方資源連結（例如所在縣市的避難所查詢系統、氣象與災防資訊來源），本頁未附上未經查證的網址，請自行確認後填入。",
+    mres_links: [
+      { label: "避難所查詢系統（請填入所在縣市連結）", url: "#", desc: "請自行確認並填入官方連結" },
+      { label: "氣象與災防資訊（請填入官方連結）", url: "#", desc: "請自行確認並填入官方連結" },
+      { label: "社區／里辦公處聯絡資訊（請填入）", url: "#", desc: "請自行確認並填入實際聯絡方式" }
+    ],
+
+    mana_title: "我的演練進度",
+    mana_desc: "彙整六大面向的檢核清單完成度，協助你追蹤演練進展，資料僅儲存在你自己的瀏覽器裡，不會上傳到任何伺服器。",
+    mana_stat_total: "總檢核項目", mana_stat_done: "已完成項目",
+    mana_stat_pct: "整體完成率", mana_stat_cards: "已讀關鍵概念卡",
+    mana_progress_title: "各面向完成度",
+    mana_export: "匯出我的演練紀錄 (CSV)",
+    mana_clear: "🗑 清除演練紀錄",
+    mana_clear_confirm: "確定要清除所有演練紀錄嗎？此操作無法復原。",
+    mana_saved_note: "💾 進度已自動儲存於本機瀏覽器（localStorage），清除瀏覽器資料會一併清除。",
+
+    date: "Version 2026.07.20",
+    copyright: "For Personal & Community Preparedness Use",
+    architect_label: "Architect:",
+    architect_name: "Prof. Shihmin Lo",
+  },
+  en: {
+    brand: "URD",
+    title: "Mobile Network Outage Drill: Action Plan",
+    subtitle: "A Personal & Family Guide to Community Resilience",
+    nav_prev: "Previous", nav_next: "Next", nav_home: "Home",
+    key_terms: "Key Concepts", flip_prompt: "Tap to flip",
+    flip_status: "Read {read} / Shown {shown} / Total {total}",
+    flip_next: "Next", flip_retry: "Restart",
+    audio_read: "Audio Guide",
+    checklist_title: "Action Checklist", checklist_status: "Completed {done} / {total}",
+    checklist_complete: "✓ All items in this dimension complete — well done!",
+    overview_label: "Overview", highlights_label: "Highlights",
+    deep_dive_label: "Deep Dive", wrapup_label: "Wrap-up",
+
+    m0_nav: "0. Executive Summary",
+    m1_nav: "1. Communication & Rendezvous", m2_nav: "2. Spatial & Route Familiarity", m3_nav: "3. Offline Data Readiness",
+    m4_nav: "4. Cash & Physical Payment Backup", m5_nav: "5. Power Backup", m6_nav: "6. Information Verification Literacy",
+    mlab_nav: "7. Interactive Lab", mres_nav: "8. External Resources", mana_nav: "9. My Drill Progress",
+
+    m0_title: "If the Network Goes Down Tonight, Is Your Family Ready?",
+    m0_intro: "A mobile network outage is not just weak signal — it is a scenario where phone calls, text messages, maps, and mobile payments can all fail at the same time. Community resilience is not an abstract slogan; it is built up from the concrete preparedness actions of every family and every individual. This action plan breaks the 'Urban Resilience — Mobile Network Outage Drill' into six preparedness dimensions: communication backup and rendezvous planning, spatial and route familiarity, offline data readiness, cash and physical payment backup, power backup, and information verification literacy. None of these are 'nice to know' facts — each one asks you to actually walk your evacuation route, actually test your offline files, actually pay for something with cash. The point of the drill is not to create anxiety, but to find, while the network still works today, the gaps between what you assume works and what actually works — for instance, discovering that the ID photo you thought was saved on your phone is really just a cloud thumbnail. Through repeated drills and record-keeping, you and your family can still know where everyone is, where to go, and how to get through the day when the network truly goes down.",
+    m0_why: "Why Drill Now, Before It Happens?",
+    m0_why_desc: "Waiting for an actual disaster or infrastructure failure to try living offline for the first time is too risky. Drilling now lets you test every backup plan under low-risk, everyday conditions and confirm it genuinely works.",
+    m0_stats: [
+      { val: "6", label: "Preparedness Dimensions" },
+      { val: "1", label: "Drill to Start" },
+      { val: "$0", label: "Should Still Get By" },
+      { val: "7 Days", label: "Suggested Re-test Cycle" }
+    ],
+    m0_modules: [
+      { num: "01", title: "Communication & Rendezvous", desc: "Agree on a message format plus a physical meeting point" },
+      { num: "02", title: "Spatial & Route Familiarity", desc: "Walk your evacuation route once, offline" },
+      { num: "03", title: "Offline Data Readiness", desc: "Confirm IDs, maps and tickets truly work offline" },
+      { num: "04", title: "Cash & Physical Payment Backup", desc: "Test a day without mobile payment" },
+      { num: "05", title: "Power Backup", desc: "Keep a power bank charged — outages often mean blackouts too" },
+      { num: "06", title: "Information Verification Literacy", desc: "Verify before you forward, don't add to the confusion" }
+    ],
+    m0_start: "Start Preparing",
+
+    m1_title: "Communication & Rendezvous",
+    m1_overview: "Confirming contact details for family, partners and key colleagues, and agreeing on a message format plus a physical rendezvous point, is the first line of defense in any backup plan.",
+    m1_highlights: ["Phone Numbers", "Message Format", "Rendezvous Point", "Agreed Time"],
+    m1_p1: "Confirm phone numbers for family, partners and key colleagues in advance, and agree on a message format: \"I'm safe / Currently at __ / Heading to __ next / Will contact again around __.\" This format is short enough to send even on a weak connection, and lets the other person grasp your safety, location and next step in one message.",
+    m1_p2: "But there's a critical gap to watch for: this approach assumes the mobile network is \"intermittently restored\" or that you can reach other Wi-Fi. If the mobile network is completely down, that text message won't go through either, and the agreed format becomes useless.",
+    m1_p3: "Communication backup therefore needs a fallback that depends on no network at all: a physical rendezvous point and time. Agree in advance on where and when to meet if you truly cannot reach each other — the last line of defense when the message format fails.",
+    m1_terms: [
+      { front: "Message Format", back: "\"I'm safe / Currently at __ / Heading to __ next / Will contact again around __\" — works when the network intermittently returns or other Wi-Fi is reachable." },
+      { front: "Physical Rendezvous Point", back: "The fallback when totally offline: agree in advance on a time and place to meet, independent of any network." },
+      { front: "Intermittent Recovery", back: "A mobile outage isn't always 100% total — signal can come and go, which is exactly the scenario the message format is designed for." },
+      { front: "Communication Gap", back: "Agreeing on a message format is not the same as a true network-outage fallback — the gap most easily overlooked." }
+    ],
+    m1_wrapup: "Communication backup isn't a contact list — it's two layers: a message format to report status quickly when the network briefly returns, and a physical rendezvous point and time as the fallback when it's fully down. Both are necessary; agreeing on a message format without a rendezvous point is the most common gap. Next step: tell everyone who matters to you exactly where and when to meet.",
+    m1_checklist: [
+      "Collected up-to-date phone numbers for family, partner, and key colleagues",
+      "Confirmed the message format with them: safe / at / heading to / will contact by",
+      "Agreed on a physical rendezvous point for when contact is completely lost",
+      "Agreed on a meeting time for the rendezvous point (e.g., 18:00 same day, or reconfirm next day)",
+      "Actually told everyone involved where the rendezvous point is (not just decided it alone)"
+    ],
+
+    m2_title: "Spatial & Route Familiarity",
+    m2_overview: "Look up your nearest shelter and save a screenshot before the drill, then actually walk there during the drill to confirm the entrance, walking time, and alternate routes.",
+    m2_highlights: ["Shelter Location", "Offline Screenshot", "Entrance", "Alternate Route"],
+    m2_p1: "Before the drill, look up the location of your nearest shelter and save it as an actual screenshot in your phone's photo gallery — it must be a real image file, not just a \"starred location\" inside a maps app, or it will be just as unreachable once the network is down.",
+    m2_p2: "During the drill, deliberately avoid using Google Maps and actually walk there. The point isn't to test your stamina — it's to confirm three things: where the entrance really is (many shelters' actual entrance differs from where the map marks it), how long the walk takes, and whether there's an alternate route you can find yourself if the main road is blocked.",
+    m2_p3: "Once you've actually walked it, this information becomes part of your muscle memory, no longer dependent on any digital map.",
+    m2_terms: [
+      { front: "Shelter Screenshot", back: "Must be a real image file in your gallery, not just a \"saved place\" inside a maps app." },
+      { front: "Entrance Location", back: "The real entrance often differs from what's marked on the map — only an actual walk confirms it." },
+      { front: "Alternate Route", back: "A backup path for when the main road is blocked — must be scouted in advance, not improvised." },
+      { front: "Muscle Memory", back: "A route you've physically walked becomes memory that no longer depends on any digital map." }
+    ],
+    m2_wrapup: "Spatial familiarity can't be replaced by a screenshot. The screenshot is only backup data — the real backup is that after walking it once, your body remembers where the entrance is, how long it takes, and which way to detour if the road is blocked. This can't be learned on the spot; it can only be drilled in advance.",
+    m2_checklist: [
+      "Found the nearest shelter and saved it as an image in your phone gallery (not just a map favorite)",
+      "Actually walked to the shelter with mobile data off",
+      "Confirmed the real entrance location (matches or differs from the map marker)",
+      "Recorded the walking time from home to the shelter",
+      "Identified an alternate route for when the main road is blocked"
+    ],
+
+    m3_title: "Offline Data Readiness",
+    m3_overview: "Check whether the shelter maps, IDs, medical records, tickets and work documents on your phone truly work offline — not just appear to be there.",
+    m3_highlights: ["Offline Maps", "ID Documents", "Medications", "E-Tickets", "Work Files"],
+    m3_p1: "Check whether five categories of data on your phone work offline: shelter locations and offline maps, ID documents and emergency contacts, medical and medication records, tickets, accommodation addresses and e-tickets, and work documents plus your partners' contact list.",
+    m3_p2: "Many files appear to already be on your phone but still need a cloud connection to download — cloud photo albums, cloud drives and ticket apps often only store a thumbnail or index locally, while the actual content has to be fetched online. Turn on airplane mode and open each file one by one to find out which ones actually won't open.",
+    m3_p3: "This is the item in the whole plan most prone to false confidence: storage showing a file exists doesn't mean it will actually work once the network is down. The only way to verify it is to open it for real while offline.",
+    m3_terms: [
+      { front: "Offline Maps", back: "Shelter locations must be saved as actual image files — an in-app favorite won't open offline." },
+      { front: "Cloud Thumbnail", back: "A file shown in a photo album or cloud drive may just be a thumbnail or index, with the real content still in the cloud." },
+      { front: "Airplane-Mode Test", back: "The most direct way to verify offline readiness: turn off all connections and open each file for real." },
+      { front: "False Confidence", back: "\"It looks like it's on my phone\" is the easiest illusion to fall for — only a real test can break it." }
+    ],
+    m3_wrapup: "The point here isn't making a list — it's actually testing. Turn on airplane mode and open your shelter map, IDs, medical records, tickets and work files one by one. Anything that won't open is a real gap you've just found — that's exactly the value of drilling.",
+    m3_checklist: [
+      "Turned on airplane mode and tested whether the shelter map screenshot opens",
+      "Tested whether ID and emergency contact info opens offline",
+      "Tested whether medical and medication records open offline",
+      "Tested whether tickets, accommodation address and e-tickets open offline",
+      "Tested whether work documents and partner contact lists open offline",
+      "Re-saved any file that failed to open as a local copy in the gallery or a notes app"
+    ],
+
+    m4_title: "Cash & Physical Payment Backup",
+    m4_overview: "Prepare cash, coins and physical cards, then actually buy something to test whether daily life still works without mobile payment.",
+    m4_highlights: ["Cash", "Coins", "Physical Credit Card", "Transit Card", "Live Purchase Test"],
+    m4_p1: "Prepare a small amount of cash, coins, a physical credit card and a transit card. The amount doesn't need to be large — what matters is that you actually have it, and that it's somewhere you'll really carry out the door on drill day, not locked in a drawer at home.",
+    m4_p2: "Then actually buy something — a drink or a lunch box works fine — and observe whether everyday payment still works without mobile payment, ride-hailing, delivery or membership apps. You may find that some stores barely accept cash anymore, which is itself a gap worth recording.",
+    m4_p3: "The point isn't just \"did you bring cash\" — it's re-confirming which parts of your familiar daily routine still function once every convenience feature on your phone stops working.",
+    m4_terms: [
+      { front: "Cash Reserve", back: "A small amount of cash plus coins — the key is keeping it somewhere you'll actually carry." },
+      { front: "Physical Cards", back: "A physical credit card and transit card that don't depend on any phone app." },
+      { front: "Live Purchase Test", back: "The drill can't just be imagined — you must complete one real purchase without mobile payment." },
+      { front: "Cash-Refusing Stores", back: "Some stores now barely accept cash — that's itself a gap worth recording." }
+    ],
+    m4_wrapup: "The cash-backup test isn't really about your wallet — it's about how much flexibility your daily routine still has when the network is down. Preparing cash is just step one; the real drill is walking into a store and actually paying, to see if it works.",
+    m4_checklist: [
+      "Prepared a small amount of cash and coins somewhere you'll actually carry on drill day",
+      "Confirmed the physical credit card and transit card work normally",
+      "Completed one real purchase without mobile payment",
+      "Recorded whether that store still accepted cash",
+      "Recorded a fallback for when ride-hailing, delivery, or membership apps fail"
+    ],
+
+    m5_title: "Power Backup",
+    m5_overview: "Outages often come with blackouts or throttled cell towers — charging your power bank before you leave is the precondition for every other backup plan.",
+    m5_highlights: ["Power Bank", "Spare Battery", "Precondition", "Blackout Risk"],
+    m5_p1: "This is a gap not explicitly listed in the original action plan, but one that surfaces quickly in a real drill: a dead phone fails every backup plan even sooner than no signal does. No matter how well-prepared your message format, offline maps or e-tickets are, none of it matters once the phone is out of power.",
+    m5_p2: "Before heading out, confirm your power bank is fully charged, and keep a spare battery or a hand-crank/solar charger at home as backup for longer blackouts. The power bank itself needs periodic testing too — many people buy one and never actually use it to charge a phone, only to discover at the critical moment that the cable doesn't fit or the charge has long since drained away.",
+    m5_p3: "Power backup should therefore be treated as a precondition for both communication backup and offline data readiness, not a separate, optional add-on.",
+    m5_terms: [
+      { front: "Power Bank Pre-check", back: "Bringing it isn't enough — confirm it's actually fully charged and the cable fits." },
+      { front: "Blackout Risk", back: "A mobile outage often coincides with a blackout or throttled cell towers — it's rarely an isolated event." },
+      { front: "Precondition", back: "Power is the foundation that determines whether communication and data backups can work at all — it comes first." },
+      { front: "Spare Battery", back: "A hand-crank or solar charger, for blackouts that last longer than a power bank can cover." }
+    ],
+    m5_wrapup: "Power backup looks like the least glamorous item, yet it's the foundation the entire plan stands on. Skip charging the power bank or checking the cable fits, and every other preparation can fail at the moment it matters most.",
+    m5_checklist: [
+      "Power bank is fully charged and confirmed working",
+      "Confirmed the power bank's cable is compatible with your phone",
+      "A spare battery or hand-crank/solar charger is ready at home",
+      "Actually used the power bank to charge a phone once (not just bought and shelved)"
+    ],
+
+    m6_title: "Information Verification Literacy",
+    m6_overview: "When you can't verify information right away, ask three questions first — don't add to the confusion when bandwidth is limited.",
+    m6_highlights: ["Three Questions", "Don't Rush to Forward", "Share Your Own Status First", "Avoid Adding Confusion"],
+    m6_p1: "When you receive information, first ask yourself: is this an official notice, something you saw with your own eyes, or someone else's secondhand account? Do you genuinely need to forward it right now? These two questions filter out most unverified, purely emotional forwards.",
+    m6_p2: "In an outage or bandwidth-limited situation, every forward crowds out the messages that genuinely carry a request for help or a safety update. When you can't verify something, prioritize sending your own location, status and needs instead of rushing to spread what you've seen — if you're unsure, the next person can't judge it either, and the uncertainty just gets passed along.",
+    m6_p3: "This is something you can practice today: next time you see an unattributed message in a group chat, apply these two questions and build the habit — don't wait to try it for the first time when the network is actually down and information is already chaotic.",
+    m6_terms: [
+      { front: "Three Verification Questions", back: "Official notice / eyewitness / secondhand account? Do I really need to forward this now?" },
+      { front: "Crowding-Out Effect", back: "With limited bandwidth, unverified forwards crowd out messages that genuinely carry a request for help." },
+      { front: "Share Your Own Status First", back: "When you can't verify something, prioritize sending your own location, status and needs." },
+      { front: "Practice in Everyday Life", back: "Build the verification habit on ordinary group chats — don't wait to try it for the first time during an actual outage." }
+    ],
+    m6_wrapup: "The core of information verification literacy isn't becoming suspicious of everything — it's saving limited bandwidth for the messages that genuinely matter: requests for help and safety updates. Verify before you forward; if you can't verify, share your own status first.",
+    m6_checklist: [
+      "Built the habit of asking \"official / eyewitness / secondhand\" before acting on a message",
+      "Asked yourself \"do I really need to forward this right now?\" before forwarding",
+      "Practiced sending your own location and status first when something can't be verified",
+      "Agreed with family: unverified information doesn't get mass-forwarded"
+    ],
+
+    mlab_title: "Hands-On: Four Practical Tools",
+    mlab_desc: "Turning knowledge into tools you can use right away, to help you complete the six preparedness items faster.",
+    mlab_labs: [
+      { title: "Message Format Generator", desc: "Fill in status, location and time to generate a ready-to-send text message" },
+      { title: "Cash Reserve Calculator", desc: "Enter household size and days to estimate a suggested cash amount (for reference only)" },
+      { title: "Power Bank Runway Calculator", desc: "Estimate how many full phone charges your power bank can provide" },
+      { title: "My Readiness Radar", desc: "See your checklist completion across all six dimensions at a glance" }
+    ],
+    lab_sms_title: "Message Format Generator",
+    lab_sms_status_safe: "safe", lab_sms_status_help: "need help",
+    lab_sms_loc_ph: "Currently at (e.g. near home)",
+    lab_sms_dest_ph: "Heading to (e.g. the shelter)",
+    lab_sms_time_ph: "Will contact by (e.g. 18)",
+    lab_sms_copy: "Copy Message", lab_sms_copied: "Copied!",
+    lab_cash_title: "Cash Reserve Calculator",
+    lab_cash_members: "Household Size", lab_cash_days: "Days to Prepare For",
+    lab_cash_note: "Estimated at roughly NT$500 per person per day — for planning reference only, not financial advice. Adjust to your actual spending.",
+    lab_power_title: "Power Bank Runway Calculator",
+    lab_power_phone: "Phone Battery Capacity (mAh)", lab_power_bank: "Power Bank Capacity (mAh)",
+    lab_power_result: "Roughly {n} full phone charges",
+    lab_power_note: "Estimated at ~70% conversion efficiency; actual efficiency varies by device and cable.",
+    lab_radar_title: "My Readiness Radar",
+
+    mres_title: "External Resources",
+    mres_desc: "The fields below are placeholders for you to fill in verified official resource links (e.g., your city/county's shelter lookup system, weather and disaster-prevention information sources). No unverified URLs are included here — please confirm and fill them in yourself.",
+    mres_links: [
+      { label: "Shelter Lookup System (fill in your city/county link)", url: "#", desc: "Please verify and fill in the official link" },
+      { label: "Weather & Disaster Prevention Info (fill in official link)", url: "#", desc: "Please verify and fill in the official link" },
+      { label: "Community/Neighborhood Office Contact (fill in)", url: "#", desc: "Please verify and fill in actual contact details" }
+    ],
+
+    mana_title: "My Drill Progress",
+    mana_desc: "A summary of your checklist completion across all six dimensions to help you track your drill progress — all data stays only in your own browser, nothing is uploaded to any server.",
+    mana_stat_total: "Total Checklist Items", mana_stat_done: "Completed Items",
+    mana_stat_pct: "Overall Completion", mana_stat_cards: "Key Concept Cards Read",
+    mana_progress_title: "Completion by Dimension",
+    mana_export: "Export My Drill Record (CSV)",
+    mana_clear: "🗑 Clear Drill Record",
+    mana_clear_confirm: "Clear all drill records? This cannot be undone.",
+    mana_saved_note: "💾 Progress is auto-saved in your browser (localStorage) — clearing browser data will erase it too.",
+
+    date: "Version 2026.07.20",
+    copyright: "For Personal & Community Preparedness Use",
+    architect_label: "Architect:",
+    architect_name: "Prof. Shihmin Lo",
+  }
+};
+
+/* ---------- Shared components ---------- */
+const H2 = ({ children, icon, number }) => (
+  <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-[#004030] dark:text-[#D8C3A5] mb-6 flex items-center gap-3">
+    {icon && <span className="shrink-0">{icon}</span>}
+    {number !== undefined && <span>{number}.</span>}
+    <span>{children}</span>
+  </h2>
+);
+
+const LinkCard = ({ label, url, desc }) => (
+  <a href={url} target="_blank" rel="noopener noreferrer"
+    className="block bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-[#004030] dark:hover:border-[#D8C3A5] hover:shadow-md transition-all group">
+    <span className="font-bold font-serif text-sm text-[#004030] dark:text-[#D8C3A5] group-hover:underline">{label}</span>
+    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">{desc}</p>
+  </a>
+);
+
+const StatCard = ({ label, value }) => (
+  <div className="bg-white dark:bg-slate-800 rounded-xl p-5 text-center border border-slate-200 dark:border-slate-700">
+    <p className="text-2xl font-black text-[#004030] dark:text-[#D8C3A5]">{value}</p>
+    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{label}</p>
+  </div>
+);
+
+const FlipCardDeck = ({ terms, t, moduleId, onCardRead }) => {
+  const [groupIdx, setGroupIdx] = useState(0);
+  const [flipped, setFlipped] = useState({});
+  const [readSet, setReadSet] = useState(new Set());
+  const [shownSet, setShownSet] = useState(new Set());
+  const [shuffledOrder] = useState(() => [...Array(terms.length).keys()].sort(() => Math.random() - 0.5));
+
+  const groupSize = 2;
+  const totalGroups = Math.ceil(terms.length / groupSize);
+  const startIdx = groupIdx * groupSize;
+  const currentCardIndices = shuffledOrder.slice(startIdx, startIdx + groupSize);
+
+  useEffect(() => {
+    const newShown = new Set(shownSet);
+    currentCardIndices.forEach(idx => newShown.add(idx));
+    if (newShown.size !== shownSet.size) setShownSet(newShown);
+  }, [groupIdx]);
+
+  const handleFlip = (origIdx) => {
+    setFlipped(f => ({ ...f, [origIdx]: !f[origIdx] }));
+    if (!readSet.has(origIdx)) {
+      const newRead = new Set(readSet); newRead.add(origIdx); setReadSet(newRead);
+      if (onCardRead) onCardRead(moduleId, newRead.size);
+    }
+  };
+
+  const statusText = t.flip_status
+    .replace('{read}', readSet.size).replace('{shown}', shownSet.size).replace('{total}', terms.length);
+
+  return (
+    <div className="mt-8">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-2">{t.key_terms}</h3>
+      <p className="text-sm text-slate-400 mb-4">{statusText}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {currentCardIndices.map((origIdx) => {
+          const term = terms[origIdx];
+          return (
+            <div key={origIdx} className="perspective cursor-pointer h-36" onClick={() => handleFlip(origIdx)}>
+              <div className={`transform-style-3d relative w-full h-full transition-transform duration-500 ${flipped[origIdx] ? 'rotate-y-180' : ''}`}>
+                <div className="backface-hidden absolute inset-0 bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <p className="font-serif font-bold text-center text-[#004030] dark:text-[#D8C3A5]">{term.front}</p>
+                  <p className="text-xs text-slate-400 mt-2">{t.flip_prompt}</p>
+                </div>
+                <div className="backface-hidden rotate-y-180 absolute inset-0 bg-[#004030] dark:bg-slate-700 rounded-xl p-4 flex items-center justify-center">
+                  <p className="text-sm text-center text-[#D8C3A5] dark:text-slate-200 leading-relaxed">{term.back}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex items-center gap-3 mt-4">
+        <button onClick={() => { setGroupIdx(0); setFlipped({}); }}
+          className="px-4 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+          {t.flip_retry}
+        </button>
+        <button onClick={() => groupIdx < totalGroups - 1 && setGroupIdx(groupIdx + 1)}
+          disabled={groupIdx >= totalGroups - 1}
+          className="px-4 py-2 text-sm bg-[#004030] dark:bg-[#D8C3A5] text-white dark:text-[#004030] font-bold rounded-lg disabled:opacity-40">
+          {t.flip_next}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ChecklistCard = ({ items, t, moduleId, checklistState, onToggle }) => {
+  const checked = checklistState[moduleId] || Array(items.length).fill(false);
+  const doneCount = checked.filter(Boolean).length;
+  return (
+    <div className="mt-8 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+      <h3 className="text-lg font-bold font-serif text-[#004030] dark:text-[#D8C3A5] mb-2">{t.checklist_title}</h3>
+      <p className="text-sm text-slate-400 mb-6">{t.checklist_status.replace('{done}', doneCount).replace('{total}', items.length)}</p>
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <label key={i} className="flex items-start gap-3 cursor-pointer group">
+            <input type="checkbox" checked={!!checked[i]} onChange={() => onToggle(moduleId, i, items.length)} className="sr-only"/>
+            <span aria-hidden="true"
+              className={`mt-0.5 shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${checked[i] ? 'bg-[#004030] border-[#004030] dark:bg-[#D8C3A5] dark:border-[#D8C3A5]' : 'border-slate-300 dark:border-slate-600 group-hover:border-[#004030] dark:group-hover:border-[#D8C3A5]'}`}>
+              {checked[i] && <IconCheck size={14} className="text-white dark:text-[#004030]"/>}
+            </span>
+            <span className={`text-sm leading-relaxed ${checked[i] ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-300'}`}>{item}</span>
+          </label>
+        ))}
+      </div>
+      {doneCount === items.length && (
+        <p className="mt-4 text-sm font-bold text-[#004030] dark:text-[#D8C3A5]">{t.checklist_complete}</p>
+      )}
+    </div>
+  );
+};
+
+/* ---------- Lab components (top-level) ---------- */
+const SmsGeneratorLab = ({ t, lang }) => {
+  const [status, setStatus] = useState(t.lab_sms_status_safe);
+  const [loc, setLoc] = useState('');
+  const [dest, setDest] = useState('');
+  const [time, setTime] = useState('');
+  const [copied, setCopied] = useState(false);
+  const msg = lang === 'zh'
+    ? `我${status}／目前在${loc || '＿＿'}／接下來前往${dest || '＿＿'}／預計${time || '＿＿'}點再次聯絡`
+    : `I'm ${status} / Currently at ${loc || '__'} / Heading to ${dest || '__'} next / Will contact again around ${time || '__'}`;
+  const handleCopy = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(msg).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+    }
+  };
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 space-y-3">
+      <h4 className="font-bold font-serif text-[#004030] dark:text-[#D8C3A5]">{t.lab_sms_title}</h4>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <select value={status} onChange={e => setStatus(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+          <option value={t.lab_sms_status_safe}>{t.lab_sms_status_safe}</option>
+          <option value={t.lab_sms_status_help}>{t.lab_sms_status_help}</option>
+        </select>
+        <input value={loc} onChange={e => setLoc(e.target.value.slice(0, 30))} placeholder={t.lab_sms_loc_ph}
+          className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm"/>
+        <input value={dest} onChange={e => setDest(e.target.value.slice(0, 30))} placeholder={t.lab_sms_dest_ph}
+          className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm"/>
+        <input value={time} onChange={e => setTime(e.target.value.slice(0, 10))} placeholder={t.lab_sms_time_ph}
+          className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm"/>
+      </div>
+      <div className="p-4 bg-slate-100 dark:bg-slate-900 rounded-lg text-sm break-words">{msg}</div>
+      <button onClick={handleCopy} className="flex items-center gap-2 px-4 py-2 bg-[#004030] dark:bg-[#D8C3A5] text-white dark:text-[#004030] text-sm font-bold rounded-lg">
+        <IconCopy size={16}/>{copied ? t.lab_sms_copied : t.lab_sms_copy}
+      </button>
+    </div>
+  );
+};
+
+const CashCalcLab = ({ t }) => {
+  const [members, setMembers] = useState(3);
+  const [days, setDays] = useState(3);
+  const perPersonPerDay = 500;
+  const total = members * days * perPersonPerDay;
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 space-y-3">
+      <h4 className="font-bold font-serif text-[#004030] dark:text-[#D8C3A5]">{t.lab_cash_title}</h4>
+      <div className="grid grid-cols-2 gap-4">
+        <label className="text-sm block">{t.lab_cash_members}
+          <input type="number" min="1" max="12" value={members}
+            onChange={e => setMembers(Math.max(1, Math.min(12, Number(e.target.value) || 1)))}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"/>
+        </label>
+        <label className="text-sm block">{t.lab_cash_days}
+          <input type="number" min="1" max="14" value={days}
+            onChange={e => setDays(Math.max(1, Math.min(14, Number(e.target.value) || 1)))}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"/>
+        </label>
+      </div>
+      <p className="text-2xl font-black text-[#004030] dark:text-[#D8C3A5]">NT$ {total.toLocaleString()}</p>
+      <p className="text-xs text-slate-400">{t.lab_cash_note}</p>
+    </div>
+  );
+};
+
+const PowerBankLab = ({ t }) => {
+  const [phoneCap, setPhoneCap] = useState(4000);
+  const [bankCap, setBankCap] = useState(10000);
+  const efficiency = 0.7;
+  const charges = ((bankCap * efficiency) / phoneCap).toFixed(1);
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 space-y-3">
+      <h4 className="font-bold font-serif text-[#004030] dark:text-[#D8C3A5]">{t.lab_power_title}</h4>
+      <div className="grid grid-cols-2 gap-4">
+        <label className="text-sm block">{t.lab_power_phone}
+          <input type="number" min="1000" max="10000" step="100" value={phoneCap}
+            onChange={e => setPhoneCap(Math.max(1000, Number(e.target.value) || 4000))}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"/>
+        </label>
+        <label className="text-sm block">{t.lab_power_bank}
+          <input type="number" min="1000" max="50000" step="500" value={bankCap}
+            onChange={e => setBankCap(Math.max(1000, Number(e.target.value) || 10000))}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"/>
+        </label>
+      </div>
+      <p className="text-2xl font-black text-[#004030] dark:text-[#D8C3A5]">{t.lab_power_result.replace('{n}', charges)}</p>
+      <p className="text-xs text-slate-400">{t.lab_power_note}</p>
+    </div>
+  );
+};
+
+const ReadinessRadarLab = ({ t, checklist, dict, lang }) => {
+  const d = dict[lang];
+  const rows = [1, 2, 3, 4, 5, 6].map(m => {
+    const total = (d[`m${m}_checklist`] || []).length;
+    const done = checklist[m] ? checklist[m].filter(Boolean).length : 0;
+    return { title: d[`m${m}_title`], pct: total ? Math.round((done / total) * 100) : 0, done, total };
+  });
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 space-y-4">
+      <h4 className="font-bold font-serif text-[#004030] dark:text-[#D8C3A5]">{t.lab_radar_title}</h4>
+      {rows.map((r, i) => (
+        <div key={i}>
+          <div className="flex justify-between text-xs mb-1"><span className="text-slate-600 dark:text-slate-300">{r.title}</span><span className="text-slate-400">{r.done}/{r.total}</span></div>
+          <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-full bg-[#004030] dark:bg-[#D8C3A5] rounded-full transition-all" style={{ width: `${r.pct}%` }}/>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ---------- Main App ---------- */
+function App() {
+  const [lang, setLang] = useState('zh');
+  const [isDark, setIsDark] = useState(true);
+  const [module, setModule] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [ttsState, setTtsState] = useState('idle');
+  const [checklist, setChecklist] = useState(() => loadLS('URD_checklist', {}));
+  const [cardsRead, setCardsRead] = useState(() => loadLS('URD_cardsRead', {}));
+  const menuRef = useRef(null);
+  const t = dict[lang];
+
+  useEffect(() => { document.documentElement.classList.toggle('dark', isDark); }, [isDark]);
+  useEffect(() => { try { localStorage.setItem('URD_checklist', JSON.stringify(checklist)); } catch (e) {} }, [checklist]);
+  useEffect(() => { try { localStorage.setItem('URD_cardsRead', JSON.stringify(cardsRead)); } catch (e) {} }, [cardsRead]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [module]);
+  useEffect(() => {
+    const onClickOutside = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  const handleToggleCheck = (mid, idx, total) => {
+    setChecklist(c => {
+      const arr = c[mid] ? [...c[mid]] : Array(total).fill(false);
+      arr[idx] = !arr[idx];
+      return { ...c, [mid]: arr };
+    });
+  };
+  const handleCardRead = (mid, readCount) => setCardsRead(c => ({ ...c, [mid]: readCount }));
+
+  const modulesList = [
+    { id: 0, icon: <IconBookOpen size={18}/>, num: '0', title: t.m0_nav },
+    { id: 1, icon: <IconGlobe size={18}/>, num: '1', title: t.m1_nav },
+    { id: 2, icon: <IconFlag size={18}/>, num: '2', title: t.m2_nav },
+    { id: 3, icon: <IconLayers size={18}/>, num: '3', title: t.m3_nav },
+    { id: 4, icon: <IconTrendingUp size={18}/>, num: '4', title: t.m4_nav },
+    { id: 5, icon: <IconZap size={18}/>, num: '5', title: t.m5_nav },
+    { id: 6, icon: <IconAlertTriangle size={18}/>, num: '6', title: t.m6_nav },
+    { id: IDX_LAB, icon: <IconFlask size={18}/>, num: String(IDX_LAB), title: t.mlab_nav },
+    { id: IDX_RES, icon: <IconGlobe size={18}/>, num: String(IDX_RES), title: t.mres_nav },
+    { id: IDX_ANA, icon: <IconActivity size={18}/>, num: String(IDX_ANA), title: t.mana_nav },
+  ];
+
+  const allChecklistTotal = [1, 2, 3, 4, 5, 6].reduce((sum, m) => sum + (t[`m${m}_checklist`] || []).length, 0);
+  const allChecklistDone = [1, 2, 3, 4, 5, 6].reduce((sum, m) => sum + (checklist[m] ? checklist[m].filter(Boolean).length : 0), 0);
+  const overallPct = allChecklistTotal ? Math.round((allChecklistDone / allChecklistTotal) * 100) : 0;
+  const totalCardsRead = Object.values(cardsRead).reduce((a, b) => a + b, 0);
+
+  const goto = (m) => { setModule(m); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+  const handleExport = () => {
+    const rows = [['Module', 'Item', 'Done']];
+    for (let m = 1; m <= NUM_LEARN; m++) {
+      (t[`m${m}_checklist`] || []).forEach((item, i) => {
+        rows.push([t[`m${m}_title`], item, (checklist[m] && checklist[m][i]) ? 'Y' : 'N']);
+      });
+    }
+    const csv = '﻿' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    a.href = url;
+    a.download = `${dict.zh.brand}_${dict.zh.title}_演練紀錄_${stamp}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleClear = () => {
+    if (!window.confirm(t.mana_clear_confirm)) return;
+    setChecklist({}); setCardsRead({});
+    try { localStorage.removeItem('URD_checklist'); localStorage.removeItem('URD_cardsRead'); } catch (e) {}
+  };
+
+  const handleTTS = (action) => {
+    if (!('speechSynthesis' in window)) return;
+    if (action === 'stop') { speechSynthesis.cancel(); setTtsState('idle'); return; }
+    if (action === 'pause') { speechSynthesis.pause(); setTtsState('paused'); return; }
+    if (action === 'play') {
+      if (ttsState === 'paused') { speechSynthesis.resume(); setTtsState('playing'); return; }
+      speechSynthesis.cancel();
+      const sep = '. ';
+      let texts = [];
+      if (module === 0) {
+        texts = [t.m0_title, t.m0_intro, t.m0_why, t.m0_why_desc,
+          ...(t.m0_stats || []).map(s => `${s.label}: ${s.val}`),
+          ...(t.m0_modules || []).map(m => `${m.title}. ${m.desc}`)];
+      } else if (module >= 1 && module <= NUM_LEARN) {
+        const mk = `m${module}`;
+        texts = [t[`${mk}_title`], t[`${mk}_overview`],
+          ...(t[`${mk}_highlights`] || []),
+          t[`${mk}_p1`], t[`${mk}_p2`], t[`${mk}_p3`],
+          ...(t[`${mk}_terms`] || []).flatMap(tm => [tm.front, tm.back]),
+          t[`${mk}_wrapup`],
+          ...(t[`${mk}_checklist`] || [])];
+      } else if (module === IDX_LAB) {
+        texts = [t.mlab_title, t.mlab_desc, ...(t.mlab_labs || []).map(l => `${l.title}. ${l.desc}`)];
+      } else if (module === IDX_RES) {
+        texts = [t.mres_title, t.mres_desc, ...(t.mres_links || []).map(l => l.label)];
+      } else if (module === IDX_ANA) {
+        texts = [t.mana_title, t.mana_desc, `${t.mana_stat_pct}: ${overallPct}%`];
+      }
+      texts = texts.filter(Boolean);
+      const utt = new SpeechSynthesisUtterance(texts.join(sep));
+      utt.rate = 0.95;
+      const voices = speechSynthesis.getVoices();
+      if (lang === 'zh') {
+        const v = voices.find(v => v.lang === 'zh-TW' && v.name.includes('Yating')) || voices.find(v => v.lang === 'zh-TW') || voices.find(v => v.lang.startsWith('zh'));
+        if (v) utt.voice = v; utt.lang = 'zh-TW';
+      } else {
+        const v = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Male') || v.name.includes('Daniel'))) || voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en'));
+        if (v) utt.voice = v; utt.lang = 'en-GB';
+      }
+      utt.onend = () => setTtsState('idle');
+      utt.onerror = () => setTtsState('idle');
+      speechSynthesis.speak(utt);
+      setTtsState('playing');
+    }
+  };
+
+  const BottomNav = () => (
+    <div className="mt-12 flex justify-between items-center pt-8 border-t border-slate-300 dark:border-slate-700">
+      <button onClick={() => goto(Math.max(0, module - 1))} disabled={module === 0}
+        className="px-4 py-2 text-sm font-bold text-[#004030] dark:text-[#D8C3A5] disabled:opacity-0">← {t.nav_prev}</button>
+      <button onClick={() => goto(Math.min(TOTAL - 1, module + 1))} disabled={module === TOTAL - 1}
+        className="px-4 py-2 text-sm font-bold text-[#004030] dark:text-[#D8C3A5] disabled:opacity-0">{t.nav_next} →</button>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-[#004030] dark:bg-slate-900 text-white z-50 shadow-lg border-b border-[#D8C3A5]/30 no-print">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <div className="relative" ref={menuRef}>
+              <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-white/10 rounded-lg" aria-label="menu"><IconMenu/></button>
+              {menuOpen && (
+                <div className="absolute top-full left-0 mt-1 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[100]">
+                  {modulesList.map(m => (
+                    <button key={m.id} onClick={() => goto(m.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-slate-100 dark:hover:bg-slate-700 ${module === m.id ? 'text-[#004030] dark:text-[#D8C3A5] font-bold bg-slate-50 dark:bg-slate-900' : 'text-slate-700 dark:text-slate-200'}`}>
+                      <span className="shrink-0">{m.icon}</span><span className="truncate">{m.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button onClick={() => goto(0)} className="p-2 hover:bg-white/10 rounded-lg" aria-label="home"><IconHome size={18}/></button>
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2 min-w-0">
+              <span className="font-serif font-black text-[#D8C3A5] text-lg tracking-widest shrink-0">{t.brand}</span>
+              <span className="hidden sm:inline font-serif font-bold text-sm md:text-base truncate">{t.title}</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {ttsState === 'idle' && <button onClick={() => handleTTS('play')} className="p-2 hover:bg-white/10 rounded-lg" title={t.audio_read}><IconPlay size={18}/></button>}
+            {ttsState === 'playing' && <button onClick={() => handleTTS('pause')} className="p-2 hover:bg-white/10 rounded-lg"><IconPause size={18}/></button>}
+            {ttsState === 'paused' && <button onClick={() => handleTTS('play')} className="p-2 hover:bg-white/10 rounded-lg"><IconPlay size={18}/></button>}
+            {ttsState !== 'idle' && <button onClick={() => handleTTS('stop')} className="p-2 hover:bg-white/10 rounded-lg"><IconSquare size={16}/></button>}
+            <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} className="px-2.5 py-1.5 text-xs font-bold border border-white/30 rounded-lg hover:bg-white/10">{lang === 'zh' ? 'EN' : '中'}</button>
+            <button onClick={() => setIsDark(!isDark)} className="p-2 hover:bg-white/10 rounded-lg">{isDark ? <IconSun size={18}/> : <IconMoon size={18}/>}</button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex-1 flex pt-16 max-w-7xl mx-auto w-full">
+        <aside className="hidden md:block w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 p-4 no-print">
+          <nav className="space-y-1 sticky top-20">
+            {modulesList.map(m => (
+              <button key={m.id} onClick={() => goto(m.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${module === m.id ? 'bg-[#004030]/10 dark:bg-[#D8C3A5]/10 text-[#004030] dark:text-[#D8C3A5] font-bold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                <span className="shrink-0">{m.icon}</span><span className="truncate">{m.title}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-10 py-8 sm:py-10 overflow-x-hidden">
+          {module === 0 && (
+            <div key="m-0" className="space-y-10 animate-fade-in">
+              <div className="rounded-3xl overflow-hidden bg-[#004030] text-white p-8 sm:p-12">
+                <p className="text-[#D8C3A5] font-bold tracking-widest text-sm mb-3">{t.brand} · {t.subtitle}</p>
+                <h1 className="font-serif font-black text-3xl sm:text-5xl mb-4 leading-tight">{t.m0_title}</h1>
+                <p className="text-white/85 leading-relaxed max-w-3xl">{t.m0_intro}</p>
+                <button onClick={() => goto(1)} className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-[#D8C3A5] text-[#004030] font-bold rounded-xl hover:brightness-95">
+                  {t.m0_start} <IconArrowRight size={18}/>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {t.m0_stats.map((s, i) => <StatCard key={i} label={s.label} value={s.val}/>)}
+              </div>
+              <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-6">
+                <h3 className="font-serif font-bold text-lg text-[#004030] dark:text-[#D8C3A5] mb-2">{t.m0_why}</h3>
+                <p className="text-slate-600 dark:text-slate-300">{t.m0_why_desc}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">{t.overview_label}</h3>
+                <div className="space-y-3">
+                  {t.m0_modules.map((m, i) => (
+                    <button key={i} onClick={() => goto(i + 1)}
+                      className="w-full flex items-center gap-4 text-left bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-[#004030] dark:hover:border-[#D8C3A5] transition-all">
+                      <span className="font-serif font-black text-2xl text-[#D8C3A5] shrink-0">{m.num}</span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block font-bold text-[#004030] dark:text-[#D8C3A5]">{m.title}</span>
+                        <span className="block text-sm text-slate-500 dark:text-slate-400">{m.desc}</span>
+                      </span>
+                      <IconChevronRight className="text-slate-400 shrink-0"/>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {module >= 1 && module <= NUM_LEARN && (
+            <div key={`m-${module}`} className="space-y-6 text-lg leading-relaxed text-slate-700 dark:text-slate-300 animate-fade-in">
+              <H2 icon={modulesList[module].icon} number={modulesList[module].num}>{t[`m${module}_title`]}</H2>
+              <div className="bg-[#004030]/5 dark:bg-[#D8C3A5]/5 rounded-xl p-5 border-l-4 border-[#D8C3A5]">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-2">{t.overview_label}</h3>
+                <p>{t[`m${module}_overview`]}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">{t.highlights_label}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {t[`m${module}_highlights`].map((h, i) => (
+                    <span key={i} className="px-3 py-1 bg-[#004030]/10 dark:bg-[#D8C3A5]/10 text-[#004030] dark:text-[#D8C3A5] rounded-full text-sm font-medium">{h}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">{t.deep_dive_label}</h3>
+                <p>{t[`m${module}_p1`]}</p>
+                <p className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg italic font-serif">{t[`m${module}_p2`]}</p>
+                <p>{t[`m${module}_p3`]}</p>
+              </div>
+              <FlipCardDeck key={`cards-${module}`} terms={t[`m${module}_terms`]} t={t} moduleId={module} onCardRead={handleCardRead}/>
+              <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-5">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-2">{t.wrapup_label}</h3>
+                <p className="italic">{t[`m${module}_wrapup`]}</p>
+              </div>
+              <ChecklistCard key={`checklist-${module}`} items={t[`m${module}_checklist`]} t={t} moduleId={module} checklistState={checklist} onToggle={handleToggleCheck}/>
+              <BottomNav/>
+            </div>
+          )}
+
+          {module === IDX_LAB && (
+            <div key="m-lab" className="space-y-8 animate-fade-in">
+              <H2 icon={modulesList[NUM_LEARN + 1].icon} number={modulesList[NUM_LEARN + 1].num}>{t.mlab_title}</H2>
+              <p className="text-slate-600 dark:text-slate-300 text-lg">{t.mlab_desc}</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <SmsGeneratorLab t={t} lang={lang}/>
+                <CashCalcLab t={t}/>
+                <PowerBankLab t={t}/>
+                <ReadinessRadarLab t={t} checklist={checklist} dict={dict} lang={lang}/>
+              </div>
+              <BottomNav/>
+            </div>
+          )}
+
+          {module === IDX_RES && (
+            <div key="m-res" className="space-y-6 animate-fade-in">
+              <H2 icon={modulesList[NUM_LEARN + 2].icon} number={modulesList[NUM_LEARN + 2].num}>{t.mres_title}</H2>
+              <p className="text-slate-600 dark:text-slate-300 text-lg">{t.mres_desc}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {t.mres_links.map((l, i) => <LinkCard key={i} label={l.label} url={l.url} desc={l.desc}/>)}
+              </div>
+              <BottomNav/>
+            </div>
+          )}
+
+          {module === IDX_ANA && (
+            <div key="m-ana" className="space-y-8 animate-fade-in">
+              <H2 icon={modulesList[NUM_LEARN + 3].icon} number={modulesList[NUM_LEARN + 3].num}>{t.mana_title}</H2>
+              <p className="text-slate-600 dark:text-slate-300 text-lg">{t.mana_desc}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <StatCard label={t.mana_stat_total} value={allChecklistTotal}/>
+                <StatCard label={t.mana_stat_done} value={allChecklistDone}/>
+                <StatCard label={t.mana_stat_pct} value={`${overallPct}%`}/>
+                <StatCard label={t.mana_stat_cards} value={totalCardsRead}/>
+              </div>
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                <h3 className="font-serif font-bold text-[#004030] dark:text-[#D8C3A5] mb-4">{t.mana_progress_title}</h3>
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5, 6].map(m => {
+                    const total = (t[`m${m}_checklist`] || []).length;
+                    const done = checklist[m] ? checklist[m].filter(Boolean).length : 0;
+                    const pct = total ? Math.round((done / total) * 100) : 0;
+                    return (
+                      <button key={m} onClick={() => goto(m)} className="w-full text-left">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-medium text-slate-700 dark:text-slate-300">{t[`m${m}_title`]}</span>
+                          <span className="text-slate-400">{done}/{total}</span>
+                        </div>
+                        <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#004030] dark:bg-[#D8C3A5]" style={{ width: `${pct}%` }}/>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={handleExport} className="px-5 py-2.5 bg-[#004030] dark:bg-[#D8C3A5] text-white dark:text-[#004030] font-bold rounded-lg text-sm">{t.mana_export}</button>
+                <button onClick={handleClear} className="px-5 py-2.5 border border-red-400 text-red-500 font-bold rounded-lg text-sm">{t.mana_clear}</button>
+              </div>
+              <p className="text-xs text-slate-400">{t.mana_saved_note}</p>
+              <BottomNav/>
+            </div>
+          )}
+        </main>
+      </div>
+
+      <footer className="h-8 bg-[#004030] flex items-center justify-between px-4 shrink-0 no-print">
+        <span className="text-[#D8C3A5]/60 text-[10px] sm:text-xs">{t.date} · {t.copyright}</span>
+        <span className="text-[#D8C3A5]/60 text-[10px] sm:text-xs flex items-center gap-3">
+          <span>{t.architect_label}&nbsp;{t.architect_name}</span>
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-[#D8C3A5] hover:text-white font-bold">Top ↑</button>
+        </span>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
