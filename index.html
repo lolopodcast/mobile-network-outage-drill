@@ -120,6 +120,7 @@ const IconHome = (p) => <Icon {...p}><path d="M4 11 12 4l8 7"/><path d="M6 10v10
 const IconTrendingUp = (p) => <Icon {...p}><polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/></Icon>;
 const IconCopy = (p) => <Icon {...p}><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></Icon>;
 const IconCheck = (p) => <Icon {...p}><polyline points="5 12 10 17 19 7"/></Icon>;
+const IconDownload = (p) => <Icon {...p}><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 19h14"/></Icon>;
 
 /* ---------- Module counts ---------- */
 const NUM_LEARN = 6;
@@ -139,6 +140,8 @@ const dict = {
     flip_status: "已讀 {read} / 已顯示 {shown} / 總計 {total}",
     flip_next: "下一組", flip_retry: "重新開始",
     audio_read: "語音導覽",
+    install_btn: "安裝 App", install_ios_hint: "請點下方分享鈕（方框加箭頭），選擇「加入主畫面」即可安裝",
+    install_mac_hint: "請點選單列「檔案」→「加入 Dock」即可安裝",
     checklist_title: "行動檢核清單", checklist_status: "已完成 {done} / 共 {total} 項",
     checklist_complete: "✓ 本面向已全部完成，做得好！",
     overview_label: "概述 Overview", highlights_label: "重點 Highlights",
@@ -350,6 +353,8 @@ const dict = {
     flip_status: "Read {read} / Shown {shown} / Total {total}",
     flip_next: "Next", flip_retry: "Restart",
     audio_read: "Audio Guide",
+    install_btn: "Install App", install_ios_hint: "Tap the Share button (square with an arrow) below, then choose \"Add to Home Screen\"",
+    install_mac_hint: "Use the menu bar: File → Add to Dock",
     checklist_title: "Action Checklist", checklist_status: "Completed {done} / {total}",
     checklist_complete: "✓ All items in this dimension complete — well done!",
     overview_label: "Overview", highlights_label: "Highlights",
@@ -797,10 +802,51 @@ function App() {
   const toastTimerRef = useRef(null);
   const t = dict[lang];
 
-  const showCopyrightToast = () => {
-    setToastMsg(COPYRIGHT_MSG);
+  const showToast = (msg, duration = 2000) => {
+    setToastMsg(msg);
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToastMsg(null), 2000);
+    toastTimerRef.current = setTimeout(() => setToastMsg(null), duration);
+  };
+  const showCopyrightToast = () => showToast(COPYRIGHT_MSG, 2000);
+
+  /* ---------- PWA install prompt ---------- */
+  const deferredPromptRef = useRef(null);
+  const isIOSSafariRef = useRef(false);
+  const isMacSafariRef = useRef(false);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isStandaloneMode, setIsStandaloneMode] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const iOS = /iphone|ipad|ipod/i.test(ua) && !window.MSStream;
+    const safari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+    isIOSSafariRef.current = iOS && safari;
+    isMacSafariRef.current = !iOS && safari && /macintosh/i.test(ua);
+    setIsStandaloneMode(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
+
+    const onBeforeInstall = (e) => { e.preventDefault(); deferredPromptRef.current = e; setCanInstall(true); };
+    const onInstalled = () => { deferredPromptRef.current = null; setCanInstall(false); setIsStandaloneMode(true); };
+    window.addEventListener('beforeinstallprompt', onBeforeInstall);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  const showInstallBtn = !isStandaloneMode && (canInstall || isIOSSafariRef.current || isMacSafariRef.current);
+
+  const handleInstallClick = async () => {
+    if (deferredPromptRef.current) {
+      deferredPromptRef.current.prompt();
+      try { await deferredPromptRef.current.userChoice; } catch (e) {}
+      deferredPromptRef.current = null;
+      setCanInstall(false);
+    } else if (isIOSSafariRef.current) {
+      showToast(t.install_ios_hint, 4500);
+    } else if (isMacSafariRef.current) {
+      showToast(t.install_mac_hint, 4500);
+    }
   };
 
   /* Friendly defense: allow right-click when the user has text selected (dictionary
@@ -975,6 +1021,13 @@ function App() {
             </button>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {showInstallBtn && (
+              <button onClick={handleInstallClick}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#D8C3A5] text-[#004030] text-xs sm:text-sm font-bold rounded-lg hover:brightness-95 mr-1">
+                <IconDownload size={16}/>
+                <span className="hidden sm:inline">{t.install_btn}</span>
+              </button>
+            )}
             {ttsState === 'idle' && <button onClick={() => handleTTS('play')} className="p-2 hover:bg-white/10 rounded-lg" title={t.audio_read}><IconPlay size={18}/></button>}
             {ttsState === 'playing' && <button onClick={() => handleTTS('pause')} className="p-2 hover:bg-white/10 rounded-lg"><IconPause size={18}/></button>}
             {ttsState === 'paused' && <button onClick={() => handleTTS('play')} className="p-2 hover:bg-white/10 rounded-lg"><IconPlay size={18}/></button>}
