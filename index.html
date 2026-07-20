@@ -339,6 +339,7 @@ const dict = {
     copyright: "For Personal & Community Preparedness Use",
     architect_label: "Architect:",
     architect_name: "Prof. Shihmin Lo",
+    architect_url: "https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo",
   },
   en: {
     brand: "URD",
@@ -549,6 +550,7 @@ const dict = {
     copyright: "For Personal & Community Preparedness Use",
     architect_label: "Architect:",
     architect_name: "Prof. Shihmin Lo",
+    architect_url: "https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo",
   }
 };
 
@@ -1133,7 +1135,7 @@ function App() {
       <footer className="h-8 bg-[#004030] flex items-center justify-between px-4 shrink-0 no-print">
         <span className="text-[#D8C3A5]/60 text-[10px] sm:text-xs">{t.date} · {t.copyright}</span>
         <span className="text-[#D8C3A5]/60 text-[10px] sm:text-xs flex items-center gap-3">
-          <span>{t.architect_label}&nbsp;{t.architect_name}</span>
+          <span>{t.architect_label}&nbsp;<a href={t.architect_url} target="_blank" rel="noopener noreferrer" className="text-[#D8C3A5] hover:text-white underline">{t.architect_name}</a></span>
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-[#D8C3A5] hover:text-white font-bold">Top ↑</button>
         </span>
       </footer>
