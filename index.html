@@ -19,6 +19,7 @@
     theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], serif: ['Merriweather','serif'] } } }
   }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
@@ -39,16 +40,44 @@
     body { background: #fff !important; }
     main { padding-top: 0 !important; }
   }
+  /* Friendly defense: lock selection only on UI chrome, keep content selectable */
+  header, footer, button, [role="button"], .ui-decoration { -webkit-user-select: none; user-select: none; }
+  input, textarea, select { -webkit-user-select: text; user-select: text; }
 </style>
 </head>
 <body class="bg-[#f4f4f4] dark:bg-[#121212] selection:bg-[#004030] selection:text-white dark:selection:bg-[#D8C3A5] dark:selection:text-[#004030]">
 <div id="root"></div>
+
+<script>
+(function () {
+  var ALLOWED = ['lolopodcast.github.io', 'localhost', '127.0.0.1'];
+  var REDIRECT = 'https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo';
+  var host = location.hostname;
+  var ok = ALLOWED.some(function (d) { return host === d || host.endsWith('.' + d); });
+  if (!ok) {
+    window.__URD_BLOCKED__ = true;
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:sans-serif"><h1>Access Denied</h1><p>This resource is not authorised on this domain.</p></div>';
+    setTimeout(function () { location.href = REDIRECT; }, 3000);
+    return;
+  }
+  if (window.self !== window.top) {
+    try { window.top.location.href = window.self.location.href; }
+    catch (e) {
+      window.__URD_BLOCKED__ = true;
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:sans-serif"><h1>Frame Blocked</h1><p>This content cannot be embedded.</p></div>';
+    }
+  }
+})();
+</script>
 
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, useRef } = React;
 
 /* ---------- localStorage helpers ---------- */
 const loadLS = (key, fb) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fb; } catch { return fb; } };
+
+/* ---------- Friendly defense: copyright notice ---------- */
+const COPYRIGHT_MSG = 'Intellectual Property of Prof. Shihmin Lo';
 
 /* ---------- Icons ---------- */
 const Icon = ({ d, size = 20, className = '', children, viewBox = "0 0 24 24" }) => (
@@ -750,8 +779,45 @@ function App() {
   const [ttsState, setTtsState] = useState('idle');
   const [checklist, setChecklist] = useState(() => loadLS('URD_checklist', {}));
   const [cardsRead, setCardsRead] = useState(() => loadLS('URD_cardsRead', {}));
+  const [toastMsg, setToastMsg] = useState(null);
   const menuRef = useRef(null);
+  const toastTimerRef = useRef(null);
   const t = dict[lang];
+
+  const showCopyrightToast = () => {
+    setToastMsg(COPYRIGHT_MSG);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastMsg(null), 2000);
+  };
+
+  /* Friendly defense: allow right-click when the user has text selected (dictionary
+     lookup / notes), otherwise show a copyright toast instead of a silent block.
+     F12 / view-source / devtools shortcuts are intercepted; Ctrl+P and Ctrl+S stay
+     open so the plan can still be printed or saved for offline reference. */
+  useEffect(() => {
+    const onContextMenu = (e) => {
+      const selection = window.getSelection().toString().trim();
+      if (selection.length > 0) return;
+      e.preventDefault();
+      showCopyrightToast();
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'F12') { e.preventDefault(); showCopyrightToast(); return; }
+      if (e.ctrlKey && e.key.toLowerCase() === 'u') { e.preventDefault(); showCopyrightToast(); return; }
+      if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(e.key.toLowerCase())) { e.preventDefault(); showCopyrightToast(); return; }
+    };
+    const onDragStart = (e) => {
+      if (e.target.tagName === 'IMG' || e.target.closest('svg')) e.preventDefault();
+    };
+    document.addEventListener('contextmenu', onContextMenu);
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('dragstart', onDragStart);
+    return () => {
+      document.removeEventListener('contextmenu', onContextMenu);
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('dragstart', onDragStart);
+    };
+  }, []);
 
   useEffect(() => { document.documentElement.classList.toggle('dark', isDark); }, [isDark]);
   useEffect(() => { try { localStorage.setItem('URD_checklist', JSON.stringify(checklist)); } catch (e) {} }, [checklist]);
@@ -1060,11 +1126,19 @@ function App() {
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-[#D8C3A5] hover:text-white font-bold">Top ↑</button>
         </span>
       </footer>
+
+      {toastMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] bg-[#004030] text-[#D8C3A5] text-xs sm:text-sm px-4 py-2 rounded-full shadow-lg animate-fade-in no-print pointer-events-none">
+          {toastMsg}
+        </div>
+      )}
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+if (!window.__URD_BLOCKED__) {
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+}
 </script>
 
 <script>
